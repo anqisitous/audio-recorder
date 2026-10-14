@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>rec â é²é³</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{ color-scheme:dark; }
+  body{ margin:0; font:14px/1.5 -apple-system,"Helvetica Neue",sans-serif;
+        background:#141519; color:#e8e8ea; }
+  .wrap{ max-width:760px; margin:0 auto; padding:24px 20px 60px; }
+  h1{ font-size:20px; margin:0 0 4px; }
+  .sub{ color:#9a9aa5; font-size:12px; margin-bottom:20px; }
+  h2{ font-size:13px; text-transform:uppercase; letter-spacing:.08em;
+      color:#8b8b96; margin:24px 0 8px; }
+  .card{ background:#1c1d23; border:1px solid #2a2b33; border-radius:10px; overflow:hidden; }
+  .row{ display:flex; align-items:center; gap:10px; padding:9px 14px;
+        border-bottom:1px solid #23242b; cursor:pointer; }
+  .row:last-child{ border-bottom:none; }
+  .row:hover{ background:#22232a; }
+  .row.rec{ cursor:default; }
+  .row.rec:hover{ background:#1c1d23; }
+  .name{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dim{ color:#8b8b96; font-size:12px; white-space:nowrap; }
+  .badge{ font-size:11px; padding:2px 8px; border-radius:20px; background:#26313f; color:#9cc4ee; }
+  .badge.live{ background:#1f3a2a; color:#7fd49a; }
+  button{ font:inherit; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; }
+  .primary{ background:#3b74e9; color:#fff; }
+  .primary:disabled{ opacity:.4; cursor:default; }
+  .ghost{ background:#2a2b33; color:#e8e8ea; }
+  .danger{ background:#472430; color:#e79aa8; }
+  .bar{ display:flex; gap:10px; margin-top:12px; }
+  .empty{ color:#6d6d78; text-align:center; padding:18px; font-size:13px; }
+  .rec .path{ font-size:12px; color:#9cc4ee; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>rec</h1>
+  <div class="sub">ã¢ããªãé¸ã¶ â ä¿å­åãé¸ã¶ â é²é³ãåæ­¢ããã¨ãã¡ã¤ã«ãæ¸ããã¾ãã</div>
+
+  <h2>ã¢ããª</h2>
+  <div class="card" id="apps"></div>
+  <div class="bar">
+    <button class="primary" id="start">é¸æããã¢ããªãé²é³</button>
+    <button class="ghost" id="reload">åèª­ã¿è¾¼ã¿</button>
+  </div>
+
+  <h2>é²é³ä¸­</h2>
+  <div class="card" id="tracks"></div>
+  <div class="bar">
+    <button class="danger" id="quit">ãã¹ã¦åæ­¢ãã¦çµäº</button>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sel = new Set();
+
+async function j(url){ return (await fetch(url)).json(); }
+
+async function refresh(){
+  try{
+    const [p, i] = await Promise.all([j('/processes'), j('/info')]);
+    sel.forEach(id => { if(!p.processes.some(x => x.objectID === id)) sel.delete(id); });
+
+    $('#apps').innerHTML = p.processes.length ? p.processes.map(x => `
+      <div class="row" data-id="${x.objectID}">
+        <input type="checkbox" ${sel.has(x.objectID)?'checked':''}>
+        <span class="name">${esc(x.name)}</span>
+        ${x.runningOutput?'<span class="badge live">playing</span>':''}
+        ${x.tracked?'<span class="badge">rec</span>':''}
+        <span class="dim">${x.objectID}</span>
+      </div>`).join('') : '<div class="empty">é³ãåºãã¦ããã¢ããªãããã¾ãã</div>';
+
+    $('#tracks').innerHTML = i.tracks.length ? i.tracks.map(t => `
+      <div class="row rec" data-id="${t.id}">
+        <span class="name">${esc(t.name)}<br><span class="path">${esc(t.file)}</span></span>
+        <span class="dim">${Math.round(t.rate)}Hz</span>
+        <button class="danger" data-stop="${t.id}">åæ­¢</button>
+      </div>`).join('') : '<div class="empty">é²é³ãã¦ãã¾ãã</div>';
+
+    $('#start').disabled = sel.size === 0;
+  }catch(e){ /* rec ãçµäºãã */ }
+}
+
+$('#apps').addEventListener('click', e => {
+  const row = e.target.closest('.row'); if(!row) return;
+  const id = +row.dataset.id;
+  const cb = row.querySelector('input');
+  if(e.target !== cb) cb.checked = !cb.checked;
+  cb.checked ? sel.add(id) : sel.delete(id);
+  $('#start').disabled = sel.size === 0;
+});
+
+$('#start').onclick = async () => {
+  const ids = [...sel].join(',');
+  sel.clear();
+  const r = await j('/start?apps=' + encodeURIComponent(ids));
+  if(r.failed && r.failed.length) alert('å¤±æ: ' + r.failed.join(', '));
+  refresh();
+};
+
+$('#tracks').addEventListener('click', async e => {
+  const b = e.target.closest('[data-stop]'); if(!b) return;
+  await j('/remove?id=' + b.dataset.stop);
+  refresh();
+});
+
+$('#reload').onclick = refresh;
+$('#quit').onclick = async () => { await j('/quit'); };
+refresh();
+setInterval(refresh, 1500);
+</script>
+</body>
+</html>
