@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>rec â é²é³</title>
+<title>rec - 録音</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{ color-scheme:dark; }
@@ -37,19 +37,19 @@
 <body>
 <div class="wrap">
   <h1>rec</h1>
-  <div class="sub">ã¢ããªãé¸ã¶ â ä¿å­åãé¸ã¶ â é²é³ãåæ­¢ããã¨ãã¡ã¤ã«ãæ¸ããã¾ãã</div>
+  <div class="sub">アプリを選んで録音 / 録音中のアプリを表示 / 録音ファイルを管理できます</div>
 
-  <h2>ã¢ããª</h2>
+  <h2>アプリ</h2>
   <div class="card" id="apps"></div>
   <div class="bar">
-    <button class="primary" id="start">é¸æããã¢ããªãé²é³</button>
-    <button class="ghost" id="reload">åèª­ã¿è¾¼ã¿</button>
+    <button class="primary" id="start">選択したアプリを録音</button>
+    <button class="ghost" id="reload">再読み込み</button>
   </div>
 
-  <h2>é²é³ä¸­</h2>
+  <h2>録音中</h2>
   <div class="card" id="tracks"></div>
   <div class="bar">
-    <button class="danger" id="quit">ãã¹ã¦åæ­¢ãã¦çµäº</button>
+    <button class="danger" id="quit">アプリを終了</button>
   </div>
 </div>
 
@@ -72,17 +72,17 @@ async function refresh(){
         ${x.runningOutput?'<span class="badge live">playing</span>':''}
         ${x.tracked?'<span class="badge">rec</span>':''}
         <span class="dim">${x.objectID}</span>
-      </div>`).join('') : '<div class="empty">é³ãåºãã¦ããã¢ããªãããã¾ãã</div>';
+      </div>`).join('') : '<div class="empty">録音できるアプリが見つかりません</div>';
 
     $('#tracks').innerHTML = i.tracks.length ? i.tracks.map(t => `
       <div class="row rec" data-id="${t.id}">
         <span class="name">${esc(t.name)}<br><span class="path">${esc(t.file)}</span></span>
         <span class="dim">${Math.round(t.rate)}Hz</span>
-        <button class="danger" data-stop="${t.id}">åæ­¢</button>
-      </div>`).join('') : '<div class="empty">é²é³ãã¦ãã¾ãã</div>';
+        <button class="danger" data-stop="${t.id}">停止</button>
+      </div>`).join('') : '<div class="empty">録音中のアプリはありません</div>';
 
     $('#start').disabled = sel.size === 0;
-  }catch(e){ /* rec ãçµäºãã */ }
+  }catch(e){ /* rec が起動していない */ }
 }
 
 $('#apps').addEventListener('click', e => {
@@ -98,7 +98,7 @@ $('#start').onclick = async () => {
   const ids = [...sel].join(',');
   sel.clear();
   const r = await j('/start?apps=' + encodeURIComponent(ids));
-  if(r.failed && r.failed.length) alert('å¤±æ: ' + r.failed.join(', '));
+  if(r.failed && r.failed.length) alert('失敗: ' + r.failed.join(', '));
   refresh();
 };
 

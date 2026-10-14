@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- 角丸の四角 -->
+  <rect x="96" y="96" width="832" height="832" rx="180" ry="180"
+        fill="#1c1d23" stroke="#e8e8ea" stroke-width="48"/>
+  <!-- × 印 (録音停止のイメージ) -->
+  <g stroke="#e8e8ea" stroke-width="72" stroke-linecap="round">
+    <line x1="336" y1="336" x2="688" y2="688"/>
+    <line x1="688" y1="336" x2="336" y2="688"/>
+  </g>
+</svg>
